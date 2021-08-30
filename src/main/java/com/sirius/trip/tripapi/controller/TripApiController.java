@@ -56,6 +56,32 @@ public class TripApiController {
 		} catch (Exception e) {
 			return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
+	}
+	
+	@PostMapping("touristLocationAll")
+	@PreAuthorize("hasRole('ROLE_ADMIN')")
+	public ResponseEntity<List<TouristLocations>> createAllTouristLocations(
+			@RequestBody Map<String, List<Map<String, Object>>> paramMap) {
+
+		try {
+			
+			
+			List<TouristLocations> inputList = paramMap.keySet().stream().map(mapper -> {
+
+				List<TouristLocations> rowList = paramMap.get(mapper).stream()
+						.map(row -> new TouristLocations(TripApiUtils.toString(row.get("location")), mapper,
+								TripApiUtils.toInteger(row.get("popularity"))))
+						.collect(Collectors.toList());
+				return rowList;
+			}).flatMap(mapper -> mapper.stream())
+			.collect(Collectors.toList());
+
+			List<TouristLocations> _entityList = tripApiRepository.saveAll(inputList);
+
+			return new ResponseEntity<>(_entityList, HttpStatus.CREATED);
+		} catch (Exception e) {
+			return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 
 	}
 
@@ -66,6 +92,7 @@ public class TripApiController {
 	 * @return
 	 */
 	@GetMapping("touristLocation/{id}")
+	@PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
 	public ResponseEntity<TouristLocations> getTouristLocationById(@PathVariable("id") String location) {
 
 		try {
@@ -81,8 +108,14 @@ public class TripApiController {
 		}
 
 	}
-
+	
+	/**
+	 * Gets all the Tourist Location
+	 * 
+	 * @return
+	 */
 	@GetMapping("touristLocation")
+	@PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
 	public ResponseEntity<List<TouristLocations>> getAllTouristLocation() {
 		try {
 			List<TouristLocations> resultList = new ArrayList<TouristLocations>();
@@ -98,8 +131,16 @@ public class TripApiController {
 		}
 
 	}
-
+	
+	/**
+	 * Updates Tourist Location bases on location
+	 * 
+	 * @param locationId
+	 * @param input
+	 * @return
+	 */
 	@PutMapping("/touristLocation/{id}")
+	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	public ResponseEntity<TouristLocations> updateTutorial(@PathVariable("id") String locationId,
 			@RequestBody TouristLocations input) {
 		try {
@@ -117,8 +158,15 @@ public class TripApiController {
 			return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
-
+	
+	/**
+	 * Delete Tourist Location based on location
+	 * 
+	 * @param location
+	 * @return
+	 */
 	@DeleteMapping("touristLocation/{id}")
+	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	public ResponseEntity<HttpStatus> deleteTouristLocation(@PathVariable("id") String location) {
 		try {
 			tripApiRepository.deleteById(location);
@@ -127,8 +175,13 @@ public class TripApiController {
 			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
-
+	
+	/**
+	 * Delete All Tourist Locations
+	 * @return
+	 */
 	@DeleteMapping("/touristLocation")
+	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	public ResponseEntity<HttpStatus> deleteAllTouristLocations() {
 		try {
 			tripApiRepository.deleteAll();
@@ -137,9 +190,15 @@ public class TripApiController {
 			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
-
+	
+	/**
+	 * Gets Non covid area from external API
+	 * 
+	 * @param stateList
+	 * @return
+	 */
 	@GetMapping("nonCovidArea")
-	@PreAuthorize("hasRole('ROLE_USER')")
+	@PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
 	public ResponseEntity<List<TouristLocations>> nonCovidArea(@RequestParam (required = false,value="stateList") List<String> stateList) {
 
 		try {
